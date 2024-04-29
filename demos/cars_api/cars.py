@@ -10,3 +10,5 @@ async def cars() -> list[CarData]:
     return [
         CarData(1, "Dodge", "Colt", 1977, "metallic blue", 10000.0),
         CarData(1, "Dodge", "Colt", 1977, "metallic blue", 10000.0)]
+
+

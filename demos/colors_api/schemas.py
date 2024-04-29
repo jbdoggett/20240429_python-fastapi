@@ -11,4 +11,3 @@ class Color(BaseColor):
 
     class Config: # for later
         from_attributes = True
-
