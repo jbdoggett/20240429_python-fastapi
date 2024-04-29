@@ -1,7 +1,6 @@
 from fastapi import FastAPI
-from typing import Any, TypedDict
 
-from schemas import Color
+from schemas import Color, ColorCreate
 from models import ColorDict, ColorDataClass
 
 
@@ -24,3 +23,8 @@ async def all_colors2() -> list[ColorDataClass]:
         ColorDataClass(1, "red", "ff0000"),
         ColorDataClass(2, "green", "00ff00"),
         ColorDataClass(3, "blue", "0000f")]
+
+@app.post("/colors", response_model=Color)
+async def create_color(color: ColorCreate) -> ColorDataClass:
+    print(color)
+    return ColorDataClass(1, color.name, color.hex_code)

@@ -20,3 +20,9 @@ GET http://127.0.0.1:8000/planets
 
 ###
 GET http://127.0.0.1:8000/cars
+
+###
+POST http://127.0.0.1:8000/colors
+Content-Type: application/json
+
+{"name": "purple", "hex_code":"FF00FF"}
