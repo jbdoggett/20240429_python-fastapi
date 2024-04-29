@@ -2,13 +2,13 @@ from fastapi import FastAPI
 from typing import Any, TypedDict
 
 from schemas import Color
-from models import ColorDict
+from models import ColorDict, ColorDataClass
 
 
 app = FastAPI()
 
 @app.get("/colors", response_model=list[Color])
-async def root() -> list[ColorDict]:
+async def all_colors() -> list[ColorDict]:
     return [
         {"id": 1, "name": "red", "hex_code": "ff0000"},
         {"id": 2, "name": "green", "hex_code": "00ff00"},
@@ -17,3 +17,10 @@ async def root() -> list[ColorDict]:
 @app.get("/stars")
 async def all_stars() -> list[str]:
     return ["mwc560", "m45", "vega"]
+
+@app.get("/colors2", response_model=list[Color])
+async def all_colors2() -> list[ColorDataClass]:
+    return [
+        ColorDataClass(1, "red", "ff0000"),
+        ColorDataClass(2, "green", "00ff00"),
+        ColorDataClass(3, "blue", "0000f")]
