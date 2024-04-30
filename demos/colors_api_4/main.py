@@ -1,30 +1,60 @@
-from fastapi import FastAPI
+# Enable running uvicorn from within python.
+from fastapi import FastAPI, Depends, HTTPException
+from typing import Annotated
+import uvicorn
 
-from schemas import Color, ColorCreate
-from models import ColorDict, ColorDataClass
+import models
+import schemas
+from database import engine
+from services.colors_sql_data import ColorsSqlData
 
+models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
-@app.get("/colors", response_model=list[Color])
-async def all_colors() -> list[ColorDict]:
-    return [
-        {"id": 1, "name": "red", "hex_code": "ff0000"},
-        {"id": 2, "name": "green", "hex_code": "00ff00"},
-        {"id": 3, "name": "blue", "hex_code": "0000ff"}]
+ColorsSqlDataType = Annotated[ColorsSqlData, Depends(ColorsSqlData)]
 
-@app.get("/stars")
-async def all_stars() -> list[str]:
-    return ["mwc560", "m45", "vega"]
+@app.get("/colors", response_model=list[schemas.Color])
+async def all_colors(
+    colors_sql_data: Annotated[ColorsSqlData, Depends(ColorsSqlData)],
+                     ) -> list[models.Color]:
+    return colors_sql_data.get_colors()
 
-@app.get("/colors2", response_model=list[Color])
-async def all_colors2() -> list[ColorDataClass]:
-    return [
-        ColorDataClass(1, "red", "ff0000"),
-        ColorDataClass(2, "green", "00ff00"),
-        ColorDataClass(3, "blue", "0000f")]
+@app.get("colors/{color_id}", response_model=schemas.Color)
+async def one_color(
+    color_id: int,
+    colors_sql_data: ColorsSqlDataType) -> models.Color:
+    if color_id < 1:
+        raise HTTPException(status_code=400, detail="Invalid color id")
+    color_model = colors_sql_data.get_color(color_id)
+    if color_model is None:
+        raise HTTPException(status_code=404, detail="Color not found")
+    return color_model
 
-@app.post("/colors", response_model=Color)
-async def create_color(color: ColorCreate) -> ColorDataClass:
-    print(color)
-    return ColorDataClass(1, color.name, color.hex_code)
+@app.post("/colors", response_model=schemas.Color)
+async def create_color(color: schemas.ColorCreate,
+                       colors_sql_data:
+                       Annotated[ColorsSqlData, Depends(ColorsSqlData)],
+                        ) -> models.Color:
+    return colors_sql_data.create_color(color)
+
+# put is a replace
+@app.put("colors/{color_id}", response_model=schemas.Color)
+async def replace_color(color_id: int,
+                        color: schemas.Color,
+                        colors_sql_data: ColorsSqlDataType
+                        ) -> models.Color:
+    if color_id < 1:
+        raise HTTPException(status_code=400, detail="Invalid color id")
+    if color_id != color.id:
+        raise HTTPException(status_code=400, detail="Invalid color mismatch")
+    color_model = colors_sql_data.update_color(color)
+    if color_model is None:
+        raise HTTPException(status_code=404, detail="Color not found")
+    return color_model
+
+def main() -> None:
+    uvicorn.run("main:app", host="0.0.0.0", reload=True, port=8000)
+
+if __name__ == "__main__":
+    main()
