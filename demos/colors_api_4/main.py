@@ -53,6 +53,19 @@ async def replace_color(color_id: int,
         raise HTTPException(status_code=404, detail="Color not found")
     return color_model
 
+# like one color
+@app.delete("colors/{color_id}", response_model=schemas.Color)
+async def delete(
+    color_id: int,
+    colors_sql_data: ColorsSqlDataType) -> models.Color:
+    if color_id < 1:
+        raise HTTPException(status_code=400, detail="Invalid color id")
+    color_model = colors_sql_data.delete_color(color_id)
+    if color_model is None:
+        raise HTTPException(status_code=404, detail="Color not found")
+    return color_model
+
+
 def main() -> None:
     uvicorn.run("main:app", host="0.0.0.0", reload=True, port=8000)
 
